@@ -1,0 +1,45 @@
+#include <AccelStepper.h>
+
+// Define motor pins (adjust based on your wiring)
+#define X_STEP_PIN 54     // X-axis step
+#define X_DIR_PIN 55      // X-axis direction
+#define Y_STEP_PIN 60     // Y-axis step
+#define Y_DIR_PIN 61      // Y-axis direction
+
+// Initialize motors with AccelStepper (DRIVER mode for DM860T)
+AccelStepper motorX(AccelStepper::DRIVER, X_STEP_PIN, X_DIR_PIN);
+AccelStepper motorY(AccelStepper::DRIVER, Y_STEP_PIN, Y_DIR_PIN);
+
+// Earthquake waveform parameters
+float amplitude = 1000;   // Steps (adjust for your table's range)
+float frequency = 0.5;    // Hz (adjust for desired shake intensity)
+unsigned long prevTime = 0;
+
+void setup() {
+  // Configure motors
+  motorX.setMaxSpeed(1000);     // Steps/sec (adjust for NEMA 34 torque)
+  motorX.setAcceleration(500);  // Steps/sec²
+  motorY.setMaxSpeed(1000);
+  motorY.setAcceleration(500);
+
+  Serial.begin(9600);
+  Serial.println("Shake Table Initialized");
+}
+
+void loop() {
+  // Generate earthquake-like motion (sine wave for simplicity)
+  unsigned long currentTime = millis();
+  if (currentTime - prevTime >= 10) {  // Update every 10ms
+    float timeSec = currentTime / 1000.0;
+    float displacement = amplitude * sin(2 * PI * frequency * timeSec);
+
+    motorX.moveTo(displacement);
+    motorY.moveTo(displacement);  // Sync X/Y for diagonal motion (adjust as needed)
+    
+    prevTime = currentTime;
+  }
+
+  // Run motors
+  motorX.run();
+  motorY.run();
+}
